@@ -1,4 +1,5 @@
 from rich import print
+import timeit
 
 
 def main():
@@ -8,18 +9,18 @@ def main():
         for report in file.readlines():
             report = report.strip('\n').split(' ')
             report = [int(num) for num in report]
-            print(report)
+            # print(report)
             # valid = is_report_valid(report)
             # print(valid)
             # if valid:
             #     score_part_1 += 1
 
             valid = is_report_valid_damped(report)
-            print(valid)
+            # print(valid)
             if valid:
                 score_part_2 += 1
     # print(f'part 1: {score_part_1}')
-    print(f'part 2: {score_part_2}')
+    # print(f'part 2: {score_part_2}')
     return
 
 
@@ -59,5 +60,13 @@ def is_report_valid_damped(report: list[int]):
 
 
 if __name__ == "__main__":
-    main()
+    # time = timeit.timeit(main, number=1000)
+    # print(time)
+    reports = [[int(x)
+                for x in report.split()]
+               for report in open('./test_inputs.txt')]
+    for report in reports:
+        print(report)
+
+    # main()
     pass
