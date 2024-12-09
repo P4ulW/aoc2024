@@ -1,5 +1,7 @@
 # from rich import print
 from rich.progress import track
+from functools import lru_cache
+from numba import njit
 
 
 def decompress_file(file: list[int]):
@@ -18,6 +20,7 @@ def decompress_file(file: list[int]):
     return disk
 
 
+@njit
 def compress_disk(disk: list[int]):
     start = 0
     end = len(disk)-1
@@ -36,12 +39,25 @@ def compress_disk(disk: list[int]):
     return disk
 
 
+@njit
 def compress_disk_blocks(disk: list[int]):
     start = 0
     end = len(disk)-1
+    block_id = disk[end]
+    while disk[end] == -1:
+        disk[end-1]
+        end -= 1
+
     while not start >= end:
         if disk[end] == -1:
             end -= 1
+            continue
+        block_id = disk[end]
+
+        if disk[start] == block_id:
+            # print(f'reached block {block_id}, skipping')
+            start = 0
+            end -= get_current_blocksize(end, disk)
             continue
 
         if not disk[start] == -1:
@@ -50,15 +66,20 @@ def compress_disk_blocks(disk: list[int]):
 
         hole_size = get_current_holezise(start, disk)
         blocksize = get_current_blocksize(end, disk)
+        # print(f'hole at {start} with size {hole_size}')
         if not blocksize <= hole_size:
-            end -= blocksize
+            start += hole_size
             continue
 
+        # move block
+        # print(f'copy block {block_id} to {start}')
         for i in range(blocksize):
             disk[start] = disk[end]
             disk[end] = -1
             start += 1
             end -= 1
+        start = 0
+        # print_disk(disk)
 
     return disk
 
@@ -71,6 +92,7 @@ def print_disk(disk):
     print(out)
 
 
+@njit
 def get_current_blocksize(idx, disk):
     block_size = 0
     block_id = disk[idx]
@@ -81,6 +103,7 @@ def get_current_blocksize(idx, disk):
     return block_size
 
 
+@njit
 def get_current_holezise(idx, disk):
     hole_size = 0
     while disk[idx] == -1:
@@ -96,18 +119,20 @@ def calc_disk_checksum(disk: list[int]):
 
 
 def main():
-    with open('./test_inputs.txt', 'r') as file:
+    with open('./inputs.txt', 'r') as file:
         data = file.readline().strip()
     data = list(map(int, data))
-    # disk = decompress_file(data)
-    # print(disk)
-    # disk = compress_disk(disk)
-    # print('part 1: ', calc_disk_checksum(disk))
+    disk = decompress_file(data)
+    # print_disk(disk)
+    disk = compress_disk(disk)
+    # print_disk(disk)
+    print('part 1: ', calc_disk_checksum(disk))
 
     disk = decompress_file(data)
-    print_disk(disk)
+    print('starting:')
+    # print_disk(disk)
     disk = compress_disk_blocks(disk)
-    print_disk(disk)
+    # print_disk(disk)
     print('part 2: ', calc_disk_checksum(disk))
 
     return
