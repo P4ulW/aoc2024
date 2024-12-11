@@ -1,8 +1,6 @@
 from rich.progress import track
 from functools import cache
 
-STONE_SPLITS_LOOKUP = {}
-
 
 def main():
     file = open('./test_inputs.txt')
@@ -49,6 +47,4 @@ def split_count(stone, blinks) -> int:
 
 if __name__ == "__main__":
     main()
-    for key, value in STONE_SPLITS_LOOKUP.items():
-        print(key, value)
     pass
