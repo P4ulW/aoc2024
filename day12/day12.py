@@ -1,3 +1,7 @@
+from os import walk
+from typing import Literal
+
+
 colors = [
     'black',
     'red',
@@ -28,10 +32,10 @@ colors = [
 ]
 
 DIRECTIONS = [
-    [0, 1],
-    [1, 0],
-    [-1, 0],
-    [0, -1]
+    (1, 0),
+    (-1, 0),
+    (0, 1),
+    (0, -1)
 ]
 
 
@@ -115,43 +119,83 @@ def get_edges_field(
     field: list[tuple[int, int]],
     garden: list[list[str]],
 ) -> int:
-    plant = garden[field[0][0]][field[0][1]]
+    local_garden = [[char for char in line]
+                    for line in garden]
+    plant = local_garden[field[0][0]][field[0][1]]
     edges = 0
     (rmin, cmin), (rmax, cmax) = get_bounding_box_vertices(field)
+    for row in range(rmin, rmax+1):
+        for col in range(cmin, cmax+1):
+            if (row, col) not in field:
+                local_garden[row][col] = '_'
 
     if rmin == rmax:
         return 4
     if cmin == cmax:
         return 4
 
-    # edges down-up
-    for row in range(rmin, rmax+1):
-        prev_valid = False
-        for col in range(cmin, cmax+1):
-            print(f'r: {row}, c: {col}, valid: {prev_valid}')
-            if not garden[row][col] == plant:
-                if prev_valid:
-                    print("found edge throug invalid char")
-                    prev_valid = False
-                    edges += 1
-                continue
+    for direction in DIRECTIONS:
+        edgemap = [[stepIsEdge(row, col, direction, plant, local_garden)
+                    for col in range(cmin, cmax+1)]
+                   for row in range(rmin, rmax+1)]
+        if direction[0] == 0:
+            edges += edges_from_edgemap(edgemap, 'y')
 
-            if (col == cmax) and prev_valid:
-                print("found edge through end")
-                edges += 1
-                continue
-
-            if not isValidMove(row-1, col, garden):
-                prev_valid = True
-
-            if not garden[row - 1][col] == plant:
-                prev_valid = True
-
-            if prev_valid:
-                print('egde found through invalid')
-                edges += 1
+        else:
+            edges += edges_from_edgemap(edgemap, 'x')
+        # for edge in edgemap:
+        #     print(edge)
+        # print(edges)
+        # print('\n')
 
     return edges
+
+
+def edges_from_edgemap(
+        emap: list[list[int]],
+        direction: str) -> int:
+    edges = 0
+    if direction == 'x':
+        for r in range(len(emap)):
+            prev = 0
+            for num in emap[r]:
+                if prev == 0 and num == 1:
+                    edges += 1
+                prev = num
+        return edges
+
+    elif direction == 'y':
+        for c in range(len(emap[0])):
+            prev = 0
+            for r in range(len(emap)):
+                num = emap[r][c]
+                # print(f'r: {r} c: {c} num: {num} prev: {prev}')
+                if prev == 0 and num == 1:
+                    edges += 1
+                prev = num
+        return edges
+
+    else:
+        raise ValueError
+
+
+def stepIsEdge(
+        row: int,
+        col: int,
+        dir: tuple[int, int],
+        plant: str,
+        garden: list[list[str]]) -> int:
+    isEdge = 0
+    dr, dc = dir
+    char_before = garden[row][col]
+    if not isValidMove(row+dr, col+dc, garden):
+        if char_before == plant:
+            return 1
+        return 0
+    char_after = garden[row+dr][col+dc]
+    if char_before != char_after and char_before == plant:
+        return 1
+    return isEdge
 
 
 def get_bounding_box_vertices(
@@ -168,7 +212,7 @@ def get_bounding_box_vertices(
 
 
 def main():
-    file = open('./test_inputs.txt', 'r')
+    file = open('./inputs.txt', 'r')
     garden = [[char
                for char in line.strip()]
               for line in file.readlines()]
@@ -185,15 +229,17 @@ def main():
             plant = garden[row][col]
             fields.append(
                 get_plant_field_coords(row, col, plant, garden, visited, []))
-    # total_cost = 0
-    # for field in fields:
-    #     print(field)
-    #     total_cost += calc_field_cost(field, garden)
-    # print(f'part 1: {total_cost}')
-    print(fields[0])
-    print(get_bounding_box_vertices(fields[0]))
-    print(get_edges_field(fields[0], garden))
 
+    total_cost = 0
+    for field in fields:
+        edges = get_edges_field(field, garden)
+        plant = garden[field[0][0]][field[0][1]]
+        cost = calc_cost(edges, calc_field_area(field))
+        total_cost += cost
+        print(
+            f'Field {plant} egdes: {edges}, cost: {cost}')
+
+    print(f'part 2: {total_cost}')
     pass
 
 
