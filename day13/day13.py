@@ -1,31 +1,36 @@
+from decimal import DivisionByZero
 import itertools
+from math import gcd
 from re import findall
-# from rich import print
+from rich import print
 
 costs = {
     'A': 3,
     'B': 1
 }
-def main():
-    file = open('./test_inputs.txt')
-    data = [line.strip() for line in file.readlines()]
-    games = []
-    game = []
-    for line in data:
-        if line == '':
-            games.append(game)
-            game = []
-        else:
-            game.append(line)
-    print(games)
 
-    for game in games:
-        instr = game_to_instructions(game)
-        print(instr)
-        pos, cost = brute_force_cheapest_instruction(instr)
-        print(pos, cost)
+def game_to_instructions(game: list[str], corrected=False) -> dict:
+    instructions = {}
+    for line in game:
+        if 'Button A' in line:
+            x = int(findall(r'X\+\d+', line)[0].replace('X+', ''))
+            y = int(findall(r'Y\+\d+', line)[0].replace('Y+', ''))
+            instructions['A'] = (x, y)
 
-    return
+        elif 'Button B' in line:
+            x = int(findall(r'X\+\d+', line)[0].replace('X+', ''))
+            y = int(findall(r'Y\+\d+', line)[0].replace('Y+', ''))
+            instructions['B'] = (x, y)
+
+        elif 'Prize' in line:
+            x = int(findall(r'X=\d+', line)[0].replace('X=', ''))
+            y = int(findall(r'Y=\d+', line)[0].replace('Y=', ''))
+            instructions['Prize'] = (x, y)
+            if corrected:
+                instructions['Prize'] = (x+10000000000000, y+10000000000000)
+
+    return instructions
+
 
 def brute_force_cheapest_instruction(
     instructions: dict
@@ -49,24 +54,63 @@ def brute_force_cheapest_instruction(
     return reachable, lowest_cost
 
 
-def game_to_instructions(game: list[str]):
-    instructions = {}
-    for line in game:
-        if 'Button A' in line:
-            x = int(findall(r'X\+\d+', line)[0].replace('X+', ''))
-            y = int(findall(r'Y\+\d+', line)[0].replace('Y+', ''))
-            instructions['A'] = (x, y)
+def calc_cost(
+        instructions: dict
+):
+    possible = False
+    cost = 0
+    Tx, Ty = instructions['Prize']
+    Ax, Ay = instructions['A']
+    Bx, By = instructions['B']
 
-        elif 'Button B' in line:
-            x = int(findall(r'X\+\d+', line)[0].replace('X+', ''))
-            y = int(findall(r'Y\+\d+', line)[0].replace('Y+', ''))
-            instructions['B'] = (x, y)
+    n = (-Bx*Ty + By*Tx) / (Ax*By - Ay*Bx)
+    m = (+Ax*Ty - Ay*Tx) / (Ax*By - Ay*Bx)
+    if n == int(n) and m == int(m):
+        return True, n*costs['A']+m*costs['B']
 
-        elif 'Prize' in line:
-            x = int(findall(r'X=\d+', line)[0].replace('X=', ''))
-            y = int(findall(r'Y=\d+', line)[0].replace('Y=', ''))
-            instructions['Prize'] = (x, y)
-    return instructions
+    return possible, cost
+
+def main():
+    file = open('./inputs.txt')
+    data = [line.strip() for line in file.readlines()]
+    print(data)
+    games = []
+    game = []
+    for line in data:
+        if line == '':
+            games.append(game)
+            game = []
+        else:
+            game.append(line)
+    games.append(game)
+    print(games)
+
+    # part 1 
+    res = 0
+    for game in games:
+        instr = game_to_instructions(game)
+        # print(instr)
+        pos, cost = calc_cost(instr)
+        # print(pos, cost)
+        if pos:
+            res += cost
+
+    print(f'part 1: {res}')
+
+    # part 2 
+    res = 0
+    for game in games:
+        instr = game_to_instructions(game, True)
+        # print(instr)
+        pos, cost = calc_cost(instr)
+        # print(pos, cost)
+        if pos:
+            res += cost
+    print(f'part 1: {res}')
+
+    return
+
+    
 
 if __name__ == "__main__":
     main()
