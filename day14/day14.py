@@ -1,7 +1,5 @@
-# from rich import print
+from rich import print
 from re import findall
-from PIL import Image
-import numpy as np
 
 
 def robot_from_raw_input(input: str) -> dict[str, tuple[int, ...]]:
@@ -62,6 +60,16 @@ def calc_result(
     return result
 
 
+def mean(arr: list[int | float]):
+    return sum(arr)/len(arr)
+
+
+def var(arr: list[int | float]):
+    _mean = mean(arr)
+    var_arr = [(num-_mean)**2 for num in arr]
+    return sum(var_arr)/len(arr)
+
+
 def main():
     filename = './inputs.txt'
     file = open(filename, 'r')
@@ -88,30 +96,17 @@ def main():
 
     print('res part 1:', calc_result(end_positions, room_size))
 
+    vars = []
     for i in range(0, 10000):
         end_positions = [robot_position_after_time(robot, i, *room_size)
                          for robot in robots]
+        var_x = var([x for x, y in end_positions])
+        var_y = var([y for x, y in end_positions])
+        vars.append(var_x+var_y)
 
-        room = [[0
-                for _ in range(room_size[0])]
-                for _ in range(room_size[1])
-                ]
-        for pos in end_positions:
-            room[pos[1]][pos[0]] = 1
-        room = np.array(room, dtype=np.uint8)
-        room = (room * 255).astype(np.uint8)
-        img = Image.fromarray(room)
-        img.save(f'img_{str(i).zfill(5)}.png')
-        # for row in room:
-        #     out = ''
-        #     for num in row:
-        #         if num == 0:
-        #             out += ' '
-        #         else:
-        #             out += str(num)
-        #
-        #     out += '\n'
-        #     file.write(out)
+    min_var = min(vars)
+    print(vars.index(min_var))
+
     return
 
 
