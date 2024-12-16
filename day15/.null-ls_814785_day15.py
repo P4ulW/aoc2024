@@ -257,7 +257,7 @@ def main():
     res = calc_checksum(warehouse)
     print('part 1:', res)
 
-    warehouse, movements = get_warehouse_and_movements('./test_inputs.txt')
+    warehouse, movements = get_warehouse_and_movements('./inputs.txt')
     warehouse = widen(warehouse)
     robot_position = get_robot_pos(warehouse)
     print(robot_position)
@@ -265,15 +265,15 @@ def main():
     for movement in movements:
         warehouse, robot_position = do_movement_wide(
             warehouse, robot_position, movement)
-        print('move', movement, ':')
-        print(print_warehouse(warehouse))
-        print('\n')
-        input('enter')
-
-        # print(print_warehouse(warehouse))
-        # with open('out.txt', 'w') as file:
-        #     file.write(print_warehouse(warehouse))
+        # print('move', movement, ':')
+        # print_warehouse(warehouse)
+        # print('\n')
         # input('enter')
+
+        print(print_warehouse(warehouse))
+        with open('out.txt', 'w') as file:
+            file.write(print_warehouse(warehouse))
+        input('enter')
 
     res = calc_checksum_wide(warehouse)
     print('part 2:', res)
