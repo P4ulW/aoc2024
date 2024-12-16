@@ -3,6 +3,8 @@ from posixpath import expanduser
 from rich import print
 from operator import add, mul
 import itertools as it
+from multiprocessing import Pool
+from functools import partial
 
 
 def concat(lhs: int, rhs: int) -> int:
@@ -41,17 +43,35 @@ def main():
     # part 2
     operators = [add, mul, concat]
     res2 = 0
-    for equation in data:
-        res, expr = equation
-        # print(f'{res}={expr}')
-        number_ops = len(expr) - 1
-        op_sets = all_operator_variations(number_ops, operators)
-        all_results = [evaluate_expression(expr, ops)for ops in op_sets]
-        if res in all_results:
-            res2 += res
+    _find_equation_res = partial(equation_result, operators=operators)
+    pool = Pool(16)
+    results = pool.map(_find_equation_res, data)
+    pool.close()
+    pool.join()
+    res2 = sum(results)
+    # for equation in data:
+    #     res, expr = equation
+    #     print(f'{res}={expr}')
+    #     number_ops = len(expr) - 1
+    #     op_sets = all_operator_variations(number_ops, operators)
+    #     all_results = [evaluate_expression(expr, ops)for ops in op_sets]
+    #     if res in all_results:
+    #         res2 += res
     print(f'res2: {res2}')
 
     return
+
+
+def equation_result(equation, operators):
+    res, expr = equation
+    print(f'{res}={expr}')
+    number_ops = len(expr) - 1
+    op_sets = all_operator_variations(number_ops, operators)
+    all_results = [evaluate_expression(expr, ops)for ops in op_sets]
+    if res in all_results:
+        return res
+    else:
+        return 0
 
 
 def all_operator_variations(number_ops, operators):
