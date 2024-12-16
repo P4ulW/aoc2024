@@ -44,6 +44,7 @@ def main():
 def find_cheapest_path(
         pos: tuple[int, int],
         maze: list[str],
+        path: list[tuple[int, int]],
         cost: list[int] = [],
         visited: list[tuple[int, int]] = [],
         direction = (0, 1),
@@ -57,36 +58,34 @@ def find_cheapest_path(
         direction = rotate_direction(direction)
         new_y, new_x = y+direction[0], x+direction[1]
 
-        if depth >= 100:
-            continue
+
+        if sum(cost) > lowest_cost:
+            return lowest_cost
         next_tile = maze[new_y][new_x]
         if next_tile == WALL:
             continue
         if (new_y, new_x) in visited:
             continue
         if next_tile == EXIT:
+            # print(f'found exit with cost {sum(cost)}')
+            # print(list(zip(path, cost)))
             sum_cost = sum(cost)
             sum_cost += rotation_cost((number_rot90+1)%4)+1
             if sum_cost < lowest_cost:
                 lowest_cost = sum_cost
+                print(maze_sol(maze, path))
             return lowest_cost
 
-        # path.append((new_y, new_x))
+        path.append((new_y, new_x))
         cost.append(rotation_cost((number_rot90+1)%4)+1)
         lowest_cost = find_cheapest_path(
-            (new_y, new_x), maze, cost, visited, direction, lowest_cost, depth+1)
-        # path.pop()
+            (new_y, new_x), maze, path, cost, visited, direction, lowest_cost, depth+1)
+        path.pop()
         cost.pop()
         visited.pop()
 
     return lowest_cost
 
-def inMaze(y, x, maze):
-    sy = len(maze)
-    sx = len(maze[0])
-    if 0<=x<sx and 0<=y<sy:
-        return True
-    return False
     
 def maze_sol(maze, path):
     out = ''
