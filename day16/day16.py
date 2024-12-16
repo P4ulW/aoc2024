@@ -1,6 +1,7 @@
 from rich import print
 import sys
 import heapq as hq
+from math import cos, inf
 sys.setrecursionlimit(10_000)
 EMPTY = '.'
 WALL = '#'
@@ -33,15 +34,37 @@ def rotation_cost(num_rotations: int) -> int:
 
 
 def main():
+    # part 1
     with open('./inputs.txt', 'r') as file:
         maze = [line.strip() for line in file.readlines()]
-    print(maze)
+    # print(maze)
     for r, row in enumerate(maze):
         for c, char in enumerate(row):
             if char == START:
                 start_pos = (r, c)
-    lowest_cost = djikstra_maze(maze, start_pos)
+    lowest_cost, paths = djikstra_maze(maze, start_pos)
     print(lowest_cost)
+
+    # part 1
+    tiles = set()
+    for path in paths:
+        y, x = start_pos
+        tiles.add((y, x))
+        d_idx = 0
+        for char in path:
+            if char == 'L':
+                d_idx = (d_idx+1) % 4
+                continue
+
+            if char == 'R':
+                d_idx = (d_idx-1) % 4
+                continue
+
+            if char == 'S':
+                dy, dx = DIRECTIONS[d_idx]
+                y, x = y+dy, x+dx
+                tiles.add((y, x))
+    print(len(tiles))
 
     return
 
@@ -52,79 +75,40 @@ def djikstra_maze(
 
 ):
     y, x = start_pos
-    direction = (0, 1)
-    costs = {(y, x): 0}
+    d_idx = 0
+    costs = {(y, x, d_idx): 0}
     unexplored = []
+    lowest_cost = inf
+    paths = []
 
-    hq.heappush(unexplored, (0, y, x, direction))
+    hq.heappush(unexplored, (0, y, x, d_idx, ''))
     while len(unexplored) > 0:
-        cost, y, x, direction = hq.heappop(unexplored)
-        for number_rot90 in range(4):
-            direction = rotate_direction(direction)
-            new_y, new_x = y+direction[0], x+direction[1]
-            added_cost = rotation_cost((number_rot90+1) % 4)+1
-            next_cost = costs[(y, x)] + added_cost
-            next_tile = maze[new_y][new_x]
+        cost, y, x, d_idx, path = hq.heappop(unexplored)
 
-            if next_tile == WALL:
-                continue
-            if next_tile == EXIT:
-                print('done')
-                return costs[(y, x)] + added_cost
-            if next_tile == EMPTY:
-                if costs.get((new_y, new_x)) is None:
-                    costs[(new_y, new_x)] = next_cost
-                    hq.heappush(
-                        unexplored, (next_cost, new_y, new_x, direction))
-                else:
-                    costs[(new_y, new_x)] = min(
-                        next_cost, costs[(new_y, new_x)])
+        if lowest_cost < cost:
+            continue
 
-    return costs
+        if maze[y][x] == EXIT:
+            lowest_cost = cost
+            paths.append(path)
+            continue
 
-# def find_cheapest_path(
-#         pos: tuple[int, int],
-#         maze: list[str],
-#         path: list[tuple[int, int]],
-#         cost: list[int] = [],
-#         visited: list[tuple[int, int]] = [],
-#         direction=(0, 1),
-#         lowest_cost=1_000_100_000_000,
-#         depth=0
-# ):
-#     y, x = pos
-#     visited.append((y, x))
-#
-#     for number_rot90 in range(4):
-#         direction = rotate_direction(direction)
-#         new_y, new_x = y+direction[0], x+direction[1]
-#
-#         if sum(cost) > lowest_cost:
-#             return lowest_cost
-#         next_tile = maze[new_y][new_x]
-#         if next_tile == WALL:
-#             continue
-#         if (new_y, new_x) in visited:
-#             continue
-#         if next_tile == EXIT:
-#             # print(f'found exit with cost {sum(cost)}')
-#             # print(list(zip(path, cost)))
-#             sum_cost = sum(cost)
-#             sum_cost += rotation_cost((number_rot90+1) % 4)+1
-#             if sum_cost < lowest_cost:
-#                 lowest_cost = sum_cost
-#                 print(maze_sol(maze, path))
-#             return lowest_cost
-#
-#         path.append((new_y, new_x))
-#         cost.append(rotation_cost((number_rot90+1) % 4)+1)
-#         lowest_cost = find_cheapest_path(
-#             (new_y, new_x), maze, path, cost, visited, direction, lowest_cost, depth+1)
-#         path.pop()
-#         cost.pop()
-#         visited.pop()
-#
-#     return lowest_cost
+        if (y, x, d_idx) in costs and costs[(y, x, d_idx)] < cost:
+            continue
+
+        costs[(y, x, d_idx)] = cost
+
+        new_y, new_x = y+DIRECTIONS[d_idx][0], x-DIRECTIONS[d_idx][1]
+        if maze[new_y][new_x] != WALL:
+            hq.heappush(
+                unexplored, (cost+1, new_y, new_x, d_idx, path+'S'))
+
+        hq.heappush(
+            unexplored, (cost+1000, y, x, (d_idx+1) % 4, path+'L'))
+        hq.heappush(
+            unexplored, (cost+1000, y, x, (d_idx-1) % 4, path+'R'))
+
+    return lowest_cost, paths
 
 
 def maze_sol(maze, path):
