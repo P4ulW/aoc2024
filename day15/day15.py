@@ -204,7 +204,6 @@ def push_box_wide(
             boxes = sorted(boxes, reverse=False)
         else:
             boxes = sorted(boxes, reverse=True)
-        print(boxes)
 
         for box in boxes:
             movePossible = check_box_move(box, movement, new_warehouse)
@@ -285,9 +284,6 @@ def main():
     for movement in movements:
         warehouse, robot_position = do_movement(
             warehouse, robot_position, movement)
-        # print('move', movement, ':')
-        # print_warehouse(warehouse)
-        # print('\n')
 
     res = calc_checksum(warehouse)
     print('part 1:', res)
@@ -297,23 +293,10 @@ def main():
     robot_position = get_robot_pos(warehouse)
     print(robot_position)
 
-    # print(print_warehouse(warehouse))
-    # boxes = find_all_boxes('^', (5, 6), warehouse)
-    # print(boxes)
     print_warehouse(warehouse)
     for movement in movements:
         warehouse, robot_position = do_movement_wide(
             warehouse, robot_position, movement)
-        # print('move', movement, ':')
-        # print(print_warehouse(warehouse))
-        # print('\n')
-        # input('enter')
-    #
-    #     # print(print_warehouse(warehouse))
-    #     # with open('out.txt', 'w') as file:
-    #     #     file.write(print_warehouse(warehouse))
-    #     # input('enter')
-    #
 
     print(print_warehouse(warehouse))
     print('\n')
