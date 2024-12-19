@@ -1,5 +1,7 @@
 from rich import print
 from re import findall
+import numpy as np
+import imageio
 
 
 def robot_from_raw_input(input: str) -> dict[str, tuple[int, ...]]:
@@ -97,15 +99,22 @@ def main():
     print('res part 1:', calc_result(end_positions, room_size))
 
     vars = []
-    for i in range(0, 10000):
+
+    steps = 10000
+    img = np.zeros(shape=(steps, room_size[0], room_size[1]))
+    for i in range(0, steps):
         end_positions = [robot_position_after_time(robot, i, *room_size)
                          for robot in robots]
-        var_x = var([x for x, y in end_positions])
-        var_y = var([y for x, y in end_positions])
-        vars.append(var_x+var_y)
+        for y, x in end_positions:
+            img[i, y, x] = 255
+    #     var_x = var([x for x, y in end_positions])
+    #     var_y = var([y for x, y in end_positions])
+    #     vars.append(var_x+var_y)
+    #
+    # min_var = min(vars)
+    # print(vars.index(min_var))
 
-    min_var = min(vars)
-    print(vars.index(min_var))
+    imageio.volwrite(f'frames.tif', img.astype(np.uint8))
 
     return
 
