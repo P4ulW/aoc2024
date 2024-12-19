@@ -20,7 +20,7 @@ def main():
     print(towels)
     print(designs)
     num_makeable_designs = 0
-    for design in track(designs, total=len(designs)):
+    for design in designs:
         makeable = is_design_makeable(design, towels)
         # print(f'd: {design}, m?: {makeable}')
         if makeable:
@@ -28,7 +28,7 @@ def main():
     print(f'res part 1: {num_makeable_designs}')
 
     num_makeable_designs = 0
-    for design in track(designs, total=len(designs)):
+    for design in designs:
         makeable = is_design_makeable(design, towels)
         # print(f'd: {design}, m?: {makeable}')
 
