@@ -1,5 +1,5 @@
 from rich import print
-from collections import defaultdict
+from functools import lru_cache
 START = 'S'
 END = 'E'
 TRACK = '.'
@@ -16,6 +16,7 @@ DIRECTIONS = {
 }
 
 
+@lru_cache
 def manhattan_dist(p1:Point, p2:Point):
     dist = abs(p1[0]-p2[0])
     dist += abs(p1[1]-p2[1])
@@ -87,71 +88,57 @@ def get_length_to_end(
             path += key
             y, x = ny, nx
 
-    
-
-
     return path
 
 
 def get_shortcuts(
-        maze: Grid,
         track: list[Point],
         cheat_cost: int,
 ):
     count = 0
     for left, point in enumerate(track):
         y, x = point
-        for key, (dy,dx) in DIRECTIONS.items():
-            cheat_start_pos = (y+dy, x+dx)
-            cheat_end_pos = (y+2*dy, x+2*dx)
-            if not inMaze(maze, cheat_end_pos):
+        for right, point in enumerate(track):
+            if not left < right:
                 continue
 
-            if not maze[cheat_start_pos[0]][cheat_start_pos[1]] == WALL:
-                continue
-
-            if maze[cheat_end_pos[0]][cheat_end_pos[1]] == WALL:
+            if not manhattan_dist(track[left], track[right]) == 2:
                 continue
 
             cost_before = left
-            cost_after = track.index(cheat_end_pos) 
+            cost_after = right 
             if cost_after >= cost_before + 2 + cheat_cost:
                 count += 1
     return count
 
 def get_updated_shortcuts(
-        maze: Grid,
         track: list[Point],
         cheat_cost: int,
 ):
-
     count = 0
-    for left, point in enumerate(track[:-1]):
-        y, x = point
-        for (dy,dx) in DIRECTIONS.values():
-            cheat_start_pos = (y+dy, x+dx)
-
-            if not maze[cheat_start_pos[0]][cheat_start_pos[1]] == WALL:
+    for left, _ in enumerate(track[slice(None, -cheat_cost)]):
+        # counts = [1 for
+        #  right, _ in enumerate(track)
+        #  if ((left < right)
+        #      and (manhattan_dist(track[left], track[right])>20)
+        #      and (right >= left + cheat_cost + manhattan_dist(track[left], track[right])))]
+        # count += sum(counts)
+        for right, _ in enumerate(track[slice(left+cheat_cost, None)]):
+            right = right + left + cheat_cost
+            if not left < right:
                 continue
 
-            for right, (ey, ex) in enumerate(track): 
-                if left > right:
-                     continue
+            mdist = manhattan_dist(track[left], track[right])
+            if mdist > 20:
+                continue
 
-                cheat_end_pos = (ey, ex)
-                dist = manhattan_dist((y, x), cheat_end_pos)
-                if dist > 20:
-                    continue
-
-
-
-                cost_before = left
-                cost_after = right
-                if cost_after == cost_before + dist + cheat_cost:
-                    count += 1
+            cost_before = left
+            cost_after = right 
+            # print(cost_before, cost_after)
+            if cost_after >= cost_before + mdist + cheat_cost:
+                count += 1
     return count
     
-
 
 def main():
     with open('./inputs.txt', 'r') as file:
@@ -172,12 +159,12 @@ def main():
     path = get_length_to_end(maze, end, start, [])
     track = track_from_path(path, start)
 
-    shortcuts = get_shortcuts(maze, track, 100)
-    print(f'part 1: {shortcuts}')
+    # shortcuts = get_shortcuts(track, 100)
+    # print(f'part 1: {shortcuts}')
 
-    # # part 2
-    # shortcuts = get_updated_shortcuts(maze, track, 50)
-    # print(f'part 2: {shortcuts}')
+    # part 2
+    shortcuts = get_updated_shortcuts(track, 100)
+    print(f'part 2: {shortcuts}')
 
     return
 
