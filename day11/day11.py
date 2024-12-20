@@ -2,6 +2,8 @@ from rich.progress import track
 from functools import cache
 
 
+
+
 def main():
     file = open('./test_inputs.txt')
     stones = [int(num) for num in file.readline().strip().split(' ')]
@@ -20,6 +22,7 @@ def main():
 
     print('part 2:', res)
     return
+
 
 
 def blink_stone(stone: int) -> list[int]:
@@ -48,3 +51,4 @@ def split_count(stone, blinks) -> int:
 if __name__ == "__main__":
     main()
     pass
+
