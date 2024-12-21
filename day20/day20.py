@@ -9,15 +9,15 @@ Grid = list[list[str]]
 Point = tuple[int, int]
 
 DIRECTIONS = {
-    'L' : (0, 1),
-    'R' : (0, -1),
-    'U' : (-1, 0),
-    'D' : (1, 0),
+    'L': (0, 1),
+    'R': (0, -1),
+    'U': (-1, 0),
+    'D': (1, 0),
 }
 
 
 @lru_cache
-def manhattan_dist(p1:Point, p2:Point):
+def manhattan_dist(p1: Point, p2: Point):
     dist = abs(p1[0]-p2[0])
     dist += abs(p1[1]-p2[1])
     return dist
@@ -37,12 +37,12 @@ def track_from_path(
 
 
 def inMaze(maze: Grid,
-        point: Point
-):
+           point: Point
+           ):
     sy = len(maze)
     sx = len(maze[0])
-    y,x = point
-    if 0<=x<sx and 0<=y<sy:
+    y, x = point
+    if 0 <= x < sx and 0 <= y < sy:
         return True
     return False
 
@@ -70,12 +70,12 @@ def get_length_to_end(
         maze: Grid,
         end: Point,
         point: Point,
-        visited = [],
-        path = '',
-        ):
+        visited=[],
+        path='',
+):
 
     y, x = point
-    while (y,x) != end:
+    while (y, x) != end:
         for key, (dy, dx) in DIRECTIONS.items():
             ny, nx = y+dy, x+dx
             if (ny, nx) in visited:
@@ -106,10 +106,11 @@ def get_shortcuts(
                 continue
 
             cost_before = left
-            cost_after = right 
+            cost_after = right
             if cost_after >= cost_before + 2 + cheat_cost:
                 count += 1
     return count
+
 
 def get_updated_shortcuts(
         track: list[Point],
@@ -133,27 +134,26 @@ def get_updated_shortcuts(
                 continue
 
             cost_before = left
-            cost_after = right 
+            cost_after = right
             # print(cost_before, cost_after)
             if cost_after >= cost_before + mdist + cheat_cost:
                 count += 1
     return count
-    
+
 
 def main():
     with open('./inputs.txt', 'r') as file:
         data = [line.strip() for line in file.readlines()]
-        maze = [[char for char in line ] for line in data]
+        maze = [[char for char in line] for line in data]
         pass
     start = (0, 0)
     end = (0, 0)
     for r, row in enumerate(data):
-        for  c,char in enumerate(row):
+        for c, char in enumerate(row):
             if char == START:
                 start = (r, c)
             if char == END:
                 end = (r, c)
-
 
     # part 1
     path = get_length_to_end(maze, end, start, [])
@@ -167,6 +167,7 @@ def main():
     print(f'part 2: {shortcuts}')
 
     return
+
 
 if __name__ == '__main__':
     main()
