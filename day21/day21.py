@@ -36,94 +36,78 @@ def inKeypad(pad: Pad, pos: Point):
     return False
 
 
-def find_shortest_keystrokes(pad: Pad,
-                             position: Point,
-                             target_key: str):
-    path = ''
-    y, x = position
-    padkey = pad[y][x]
-    if padkey == target_key:
-        return y, x, ['A',]
-    visited = [(y, x)]
-    next = []
-    next.append((y, x, path))
-    paths = []
-    ty, tx = 0, 0
-    while next:
-        y, x, path = next.pop(0)
-        for key, (dy, dx) in DIRECTIONS.items():
-            ny, nx = y+dy, x+dx
-
-            if not inKeypad(pad, (ny, nx)):
-                continue
-            padkey = pad[ny][nx]
-
-            if (ny, nx) in visited:
-                continue
-
-            if padkey == ' ':
-                continue
-
-            # print('checking', ny, nx, path+key, visited)
-
-            if padkey == target_key:
-                paths.append(path+key+'A')
-                ty, tx = ny, nx
-                continue
-                # return ny, nx, path+key+'A'
-
-            visited.append((ny, nx))
-            next.append((ny, nx, path+key))
-
-    shortest_path = len(paths[0])
-    paths = [path for path in paths if len(path) == shortest_path]
-    return ty, tx, paths
+@cache
+def find_key_index(
+    pad: Pad,
+    key: str,
+):
+    for y, x in it.product(range(len(pad)), range(len(pad[0]))):
+        if pad[y][x] == key:
+            return (y, x)
+    raise ValueError(f'k {key} not in pad')
 
 
-def get_keypad_inputs(passcode):
-    pos = (3, 2)
-    total_paths = []
-    for code in passcode:
-        y, x, paths = find_shortest_keystrokes(keypad, pos, code)
-        pos = (y, x)
-        # total_paths.append(paths)
-        total_paths.append(paths)
+def find_keypath(
+        pad: Pad,
+        start_key: str,
+        target_key: str,
+):
+    sy, sx = find_key_index(pad, start_key)
+    ey, ex = find_key_index(pad, target_key)
 
-    allpaths = []
-    for seg in total_paths:
-        path = ''
-        for sseg in seg:
+    if (sy, sx) == (ey, ex):
+        return ['']
 
-    return total_paths
+    dy = ey - sy
+    dx = ex - sx
+    y_moves = 'v'*dy if dy > 0 else '^'*-dy
+    x_moves = '>'*dx if dx > 0 else '<'*-dx
+
+    if dy == 0:
+        return [x_moves]
+    if dx == 0:
+        return [y_moves]
+
+    if pad[sy][ex] == ' ':
+        return [y_moves+x_moves]
+
+    if pad[ey][sx] == ' ':
+        return [x_moves+y_moves]
+
+    return [x_moves+y_moves, y_moves+x_moves]
 
 
-def get_controller_inputs(inputs):
-    pos = (0, 2)
-    totalpath = ''
-    for code in inputs:
-        y, x, paths = find_shortest_keystrokes(controller, pos, code)
-        pos = (y, x)
-        totalpath += paths[0]
-    return totalpath
+@cache
+def get_inputs(code, depth):
+    if depth == 1:
+        return len(code)
+
+    if any(char in code for char in '0123456789'):
+        pad = keypad
+    else:
+        pad = controller
+
+    res = 0
+    for start, end in zip('A'+code, code):
+        paths = find_keypath(pad, start, end)
+        res += min(get_inputs(path+'A', depth-1) for path in paths)
+    return res
+
+
+def complexity(code, num_levels):
+    return get_inputs(code, num_levels) * int(code.strip('A'))
 
 
 def main():
-    filename = './test_inputs.txt'
+    filename = './inputs.txt'
     with open(filename) as file:
         data = [line.strip() for line in file.readlines()]
 
-    passcode = data[0]
-    path = get_keypad_inputs(passcode)
-    print(path)
-    # path = get_controller_inputs(path)
-    # print(path)
-    # path = get_controller_inputs(path)
-    # print(path)
-    # print()
-    # print('<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A')
-    # print("<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A ")
-    # print('<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A')
+    res1 = sum(complexity(code, 4) for code in data)
+    print(f'res 1: {res1}')
 
+    res2 = sum(complexity(code, 1+25+1) for code in data)
+    print(f'res 2: {res2}')
     return
 
 
