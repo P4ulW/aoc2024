@@ -114,7 +114,7 @@ def get_current_holezise(idx, disk):
 
 def calc_disk_checksum(disk: list[int]):
     disk = map(lambda x: 0 if x == -1 else x, disk)
-    checksum = sum([x*num for x, num in enumerate(disk)])
+    checksum = sum(x*num for x, num in enumerate(disk))
     return checksum
 
 
