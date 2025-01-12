@@ -3,7 +3,7 @@ from collections import defaultdict
 
 
 def main():
-    file = open('inputs.txt', 'r')
+    file = open('test_inputs.txt', 'r')
     lines = [line.strip() for line in file.readlines()]
     ordering = [line.split('|') for line in lines if '|' in line]
     updates = [line for line in lines if ',' in line]
